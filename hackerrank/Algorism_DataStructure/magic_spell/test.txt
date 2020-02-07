@@ -1,0 +1,6 @@
+Input:
+1
+faPkdmElxiyjROOhuFHbaKpmmVAXQcPTiwtCiJC 28248 BVObzwbRESpqhpvjiDGmlVJ
+
+Output:
+6

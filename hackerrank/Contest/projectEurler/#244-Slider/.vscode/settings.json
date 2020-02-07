@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "Dockerfile.*": "dockerfile",
+        "vector": "cpp",
+        "functional": "cpp",
+        "*.tcc": "cpp",
+        "string": "cpp",
+        "string_view": "cpp",
+        "map": "cpp"
+    }
+}
