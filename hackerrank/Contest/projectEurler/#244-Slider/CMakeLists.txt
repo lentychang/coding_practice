@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.10)
+project(slider-no244)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS "-g -Weffc++ -Wall -Wextra -Wsign-conversion -pedantic-errors -pthread -O0")
+find_package(GTest REQUIRED)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build/bin)
+# add_executable(new_main new_main.cpp)
+# if(GTEST_FOUND)
+#     message(${GTEST_INCLUDE_DIRS})
+#     target_link_libraries(new_main ${GTEST_LIBRARIES})
+#     target_include_directories(new_main PUBLIC ${GTEST_INCLUDE_DIRS})
+# endif()
+
+include_directories(${GTEST_INCLUDE_DIRS})
+
+add_subdirectory(src)
+
+add_subdirectory(test)
+# add_subdirectory(lib/googletest)
