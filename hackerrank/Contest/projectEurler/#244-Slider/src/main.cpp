@@ -9,20 +9,18 @@
 #include <vector>
 using namespace std;
 
-typedef vector<vector<char *>> ColorMap;
-typedef vector<vector<char *>> *ColorMapPtr;
-
+typedef vector<vector<char>> ColorMap;
 
 struct SliderMap {
 public:
   ColorMap color_map;
   ColorMap target_map;
   unsigned int n_diff_colors;
-  string path;
   unsigned int distance;
-  string possible_dirs;
   unsigned int row_idx, col_idx;
   unsigned int heuristic_value;
+  string path;
+  string possible_dirs;  
   static const string ACTIONS;
   static unsigned int ROW_TARGET;
   static unsigned int COL_TARGET;
@@ -46,7 +44,7 @@ public:
   void print();
   void print_map();
   SliderMap& operator=(SliderMap &t_smap);
-  vector<char *>& operator[](unsigned int idx);
+  vector<char>& operator[](unsigned int idx);
   SliderMap operator()(const char ch);
   bool movementAllowed(char direction);
   static void compute_target(ColorMap &target);
@@ -63,12 +61,9 @@ unsigned long long int get_checksum(const char *path);
 vector<ColorMap> read_SliderMap(const string& project_dir, const string& rel_path);
 vector<SliderMap> get_next_slide_maps(SliderMap &t_smap);
 
-
-void extend_map(map<const string, SliderMap> &cache_map,
-                multimap<unsigned int, string> &heuristic_map, string path) {
-  for (auto m : get_next_slide_maps(cache_map.at(path))) {
-    heuristic_map.insert(pair<unsigned int, string>(m.heuristic_value, m.path));
-    cache_map.insert(make_pair(m.path, move(m)));
+void extend_map(multimap<unsigned int, SliderMap> &heuristic_map) {
+  for (auto m : get_next_slide_maps(heuristic_map.begin()->second)) {
+    heuristic_map.insert(pair<unsigned int, SliderMap>(m.heuristic_value, m));
   }
 }
 
@@ -81,43 +76,41 @@ int main() {
   SliderMap begin{color_maps[0], color_maps[1], ""};
   SliderMap end{color_maps[1], color_maps[1], ""};
 
-  map<const string, SliderMap> cache_map;
-  multimap<unsigned int, string> heuristic_map;
-  cache_map.insert(make_pair(begin.path, move(begin)));
+  multimap<unsigned int, SliderMap> heuristic_map;
+  heuristic_map.insert(pair<unsigned int,SliderMap>(begin.heuristic_value,begin));
 
   string m_path{""};
 
-  heuristic_map.insert(pair<unsigned int, string>(cache_map.at("").heuristic_value, ""));
-
   // get the smallest heuristic map
-  auto smallest_heuristic_smap = cache_map.at(heuristic_map.begin()->second);
   vector<string> possible_path;
   unsigned int shortest_path_length = {numeric_limits<unsigned int>::max()};
-  while (smallest_heuristic_smap.distance > 0 ||
-         smallest_heuristic_smap.path.size() <= shortest_path_length) {
-    if (smallest_heuristic_smap.distance == 0 && smallest_heuristic_smap.n_diff_colors==0) {
-      auto another_possible_path = smallest_heuristic_smap.path;
-      auto another_possible_size = static_cast<unsigned int>(another_possible_path.size());
-      if(shortest_path_length >another_possible_size){
-        shortest_path_length = another_possible_size;
+  multimap<unsigned int, SliderMap>::iterator candidate_iter;
+  while (heuristic_map.size()>0) {
+    candidate_iter=heuristic_map.begin();
+    auto path_length_candidate = candidate_iter->second.path.size();
+    if (candidate_iter->second.n_diff_colors == 0 && candidate_iter->second.distance==0) {
+      if(shortest_path_length > path_length_candidate){
+        shortest_path_length = path_length_candidate;
         possible_path.clear();
         possible_path.shrink_to_fit();
-        possible_path.push_back(another_possible_path);
+        possible_path.push_back(candidate_iter->second.path);
       }
-      else if(shortest_path_length == another_possible_size){
-        possible_path.push_back(another_possible_path);
-      }
-      
+      else if(shortest_path_length == path_length_candidate){
+        possible_path.push_back(candidate_iter->second.path);
+      }      
     }
-    auto it = heuristic_map.begin();
-    extend_map(cache_map, heuristic_map, smallest_heuristic_smap.path);
-    heuristic_map.erase(it);
-    smallest_heuristic_smap = cache_map.at(heuristic_map.begin()->second);
+    else{
+      if(shortest_path_length-path_length_candidate >= candidate_iter->second.n_diff_colors){
+        extend_map(heuristic_map);
+      }
+    }    
+    heuristic_map.erase(candidate_iter);    
   }
 
   unsigned long long int sum{0};
   for(auto p:possible_path){
-    // cout << p << endl;
+    cout << p << endl;
+    // cache_map.at(p).print_map();
     sum += get_checksum(p);
   }
   sum %= 100000007;
@@ -125,7 +118,7 @@ int main() {
 
   return 0;
 }
-using namespace std;
+
 
 const string SliderMap::ACTIONS{'U', 'D', 'L', 'R'};
 unsigned int SliderMap::ROW_TARGET{0};
@@ -136,8 +129,8 @@ unsigned int SliderMap::N_COL{0};
 SliderMap::SliderMap(ColorMap &t_color_map, ColorMap &t_target_color_map,
                      string t_path)
     : color_map{t_color_map}, target_map{t_target_color_map},
-      n_diff_colors{0}, path{t_path}, distance{0},
-      possible_dirs{""}, row_idx{0}, col_idx{0}, heuristic_value{0} {
+      n_diff_colors{0}, distance{0}, row_idx{0}, col_idx{0},
+      heuristic_value{0}, path{t_path}, possible_dirs{""} {
   // assign color map
   // color_map.resize(t_n_row_idx, vector<char *>(t_n_col));
   // for (size_t i = 0; i < t_color_map.size(); ++i) {
@@ -152,16 +145,16 @@ SliderMap::SliderMap(ColorMap &t_color_map, ColorMap &t_target_color_map,
 }
 SliderMap::SliderMap(const SliderMap &t_smap)
     : color_map{t_smap.color_map}, target_map{t_smap.target_map},
-      n_diff_colors{t_smap.n_diff_colors}, path{t_smap.path},
-      distance{t_smap.distance}, possible_dirs{t_smap.possible_dirs},
+      n_diff_colors{t_smap.n_diff_colors}, distance{t_smap.distance},
       row_idx{t_smap.row_idx}, col_idx{t_smap.col_idx},
-      heuristic_value{t_smap.heuristic_value} {}
+      heuristic_value{t_smap.heuristic_value}, path{t_smap.path},
+      possible_dirs{t_smap.possible_dirs} {}
 SliderMap::SliderMap(SliderMap &&t_smap) noexcept
     : color_map{move(t_smap.color_map)}, target_map{move(t_smap.target_map)},
-      n_diff_colors{move(t_smap.n_diff_colors)}, path{move(t_smap.path)},
-      distance{t_smap.distance}, possible_dirs{move(t_smap.possible_dirs)},
+      n_diff_colors{move(t_smap.n_diff_colors)}, distance{t_smap.distance},
       row_idx{move(t_smap.row_idx)}, col_idx{move(t_smap.col_idx)},
-      heuristic_value{move(t_smap.heuristic_value)} {}
+      heuristic_value{move(t_smap.heuristic_value)}, path{move(t_smap.path)},
+      possible_dirs{move(t_smap.possible_dirs)} {}
 void SliderMap::update_member_var() {
   possible_dirs = get_possible_action();
   set_n_diff_color();
@@ -180,7 +173,7 @@ void SliderMap::print_map() {
   cout << "map with path: " << path << endl;
   for (auto row_idx : color_map) {
     for (auto ch_ptr : row_idx) {
-      cout << *ch_ptr;
+      cout << ch_ptr;
     }
     cout << endl;
   }
@@ -199,9 +192,7 @@ SliderMap &SliderMap::operator=(SliderMap &t_smap) {
   return *this;
 }
 
-vector<char *> &SliderMap::operator[](unsigned int idx) {
-  return color_map[idx];
-}
+vector<char> &SliderMap::operator[](unsigned int idx) { return color_map[idx]; }
 
 SliderMap SliderMap::operator()(const char ch) {
   auto possible_actions = get_possible_action();
@@ -213,8 +204,8 @@ SliderMap SliderMap::operator()(const char ch) {
 
   auto new_smap = SliderMap(*this);
   new_smap.path += ch;
-  auto new_row_idx{row_idx};
-  auto new_col_idx{col_idx};
+  unsigned int new_row_idx{row_idx};
+  unsigned int new_col_idx{col_idx};
 
   switch (ch) {
   case 'U':
@@ -243,7 +234,8 @@ void SliderMap::set_n_diff_color() {
   n_diff_colors = 0;
   for (size_t i = 0; i < N_ROW; ++i) {
     for (size_t j = 0; j < N_COL; ++j) {
-      if (*color_map[i][j] != *target_map[i][j]) {
+      if (color_map[i][j] != target_map[i][j] && 
+          target_map[i][j] != 'W') {
         n_diff_colors++;
       }
     }
@@ -259,7 +251,7 @@ void SliderMap::set_distance() {
 void SliderMap::set_whiteblock_coordinates() {
   for (unsigned int i = 0; i < N_ROW; ++i) {
     for (unsigned int j = 0; j < N_COL; ++j) {
-      if (*color_map[i][j] == 'W') {
+      if (color_map[i][j] == 'W') {
         row_idx = i;
         col_idx = j;
         return;
@@ -308,7 +300,7 @@ const string SliderMap::get_possible_action() {
 void SliderMap::compute_target(ColorMap &target) {
   for (unsigned int i = 0; i < N_ROW; ++i) {
     for (unsigned int j = 0; j < N_COL; ++j) {
-      if (*target[i][j] == 'W') {
+      if (target[i][j] == 'W') {
         SliderMap::ROW_TARGET = i;
         SliderMap::COL_TARGET = j;
         return;
@@ -365,14 +357,14 @@ vector<ColorMap> read_SliderMap(const string &project_dir,
   for (unsigned int i = 0; i < N; ++i) {
     *iss >> s;
     for (auto ch : s) {
-      matrix_begin[i].push_back(new char(ch));
+      matrix_begin[i].push_back(ch);
     }
   }
 
   for (size_t i = 0; i < N; ++i) {
     *iss >> s;
     for (auto ch : s) {
-      matrix_end[i].push_back(new char(ch));
+      matrix_end[i].push_back(ch);
     }
   }
   return vector<ColorMap>{matrix_begin, matrix_end};

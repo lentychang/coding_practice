@@ -1,56 +1,53 @@
 #include "slider_map.h"
 
-void extend_map(map<const string, SliderMap> &cache_map,
-                multimap<unsigned int, string> &heuristic_map, string path) {
-  for (auto m : get_next_slide_maps(cache_map.at(path))) {
-    heuristic_map.insert(pair<unsigned int, string>(m.heuristic_value, m.path));
-    cache_map.insert(make_pair(m.path, move(m)));
+using namespace std;
+
+void extend_map(multimap<unsigned int, SliderMap> &heuristic_map) {
+  for (auto m : get_next_slide_maps(heuristic_map.begin()->second)) {
+    heuristic_map.insert(pair<unsigned int, SliderMap>(m.heuristic_value, m));
   }
 }
 
-int main() {
+int main(int argc,char *argv[]) {
   /* Enter your code here. Read input from STDIN. Print output to STDOUT */
   string project_dir{"/home/lenty/scripts/cpp/coding_practice/hackerrank/Contest/projectEurler/#244-Slider/"};
-  string rel_path{"test/data/input8.txt"};
+  string rel_path{"test/data/input"};
+  rel_path.append(argv[1]);
+  rel_path.append(".txt");
   auto color_maps = read_SliderMap(project_dir, rel_path);
   SliderMap::compute_target(color_maps[1]);
   SliderMap begin{color_maps[0], color_maps[1], ""};
   SliderMap end{color_maps[1], color_maps[1], ""};
 
-  map<const string, SliderMap> cache_map;
-  multimap<unsigned int, string> heuristic_map;
-  cache_map.insert(make_pair(begin.path, move(begin)));
+  multimap<unsigned int, SliderMap> heuristic_map;
+  heuristic_map.insert(pair<unsigned int,SliderMap>(begin.heuristic_value,begin));
 
   string m_path{""};
 
-
-  heuristic_map.insert(pair<unsigned int, string>(cache_map.at("").heuristic_value, ""));
-
   // get the smallest heuristic map
-  auto smallest_heuristic_smap = cache_map.at(heuristic_map.begin()->second);
   vector<string> possible_path;
   unsigned int shortest_path_length = {numeric_limits<unsigned int>::max()};
-  while (smallest_heuristic_smap.distance > 0 ||
-         smallest_heuristic_smap.path.size() <= shortest_path_length) {
-    if (smallest_heuristic_smap.distance == 0 && smallest_heuristic_smap.n_diff_colors==0) {
-      auto another_possible_path = smallest_heuristic_smap.path;
-      auto another_possible_size = static_cast<unsigned int>(another_possible_path.size());
-      if(shortest_path_length >another_possible_size){
-        shortest_path_length = another_possible_size;
+  multimap<unsigned int, SliderMap>::iterator candidate_iter;
+  while (heuristic_map.size()>0) {
+    candidate_iter=heuristic_map.begin();
+    auto path_length_candidate = candidate_iter->second.path.size();
+    if (candidate_iter->second.n_diff_colors == 0 && candidate_iter->second.distance==0) {
+      if(shortest_path_length > path_length_candidate){
+        shortest_path_length = path_length_candidate;
         possible_path.clear();
         possible_path.shrink_to_fit();
-        possible_path.push_back(another_possible_path);
+        possible_path.push_back(candidate_iter->second.path);
       }
-      else if(shortest_path_length == another_possible_size){
-        possible_path.push_back(another_possible_path);
-      }
-      
+      else if(shortest_path_length == path_length_candidate){
+        possible_path.push_back(candidate_iter->second.path);
+      }      
     }
-    auto it = heuristic_map.begin();
-    extend_map(cache_map, heuristic_map, smallest_heuristic_smap.path);
-    cache_map.erase(it->second);
-    heuristic_map.erase(it);    
-    smallest_heuristic_smap = cache_map.at(heuristic_map.begin()->second);
+    else{
+      if(shortest_path_length-path_length_candidate >= candidate_iter->second.n_diff_colors){
+        extend_map(heuristic_map);
+      }
+    }    
+    heuristic_map.erase(candidate_iter);    
   }
 
   unsigned long long int sum{0};

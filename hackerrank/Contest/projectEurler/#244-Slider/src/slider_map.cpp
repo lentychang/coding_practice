@@ -86,8 +86,8 @@ SliderMap SliderMap::operator()(const char ch) {
 
   auto new_smap = SliderMap(*this);
   new_smap.path += ch;
-  auto new_row_idx{row_idx};
-  auto new_col_idx{col_idx};
+  unsigned int new_row_idx{row_idx};
+  unsigned int new_col_idx{col_idx};
 
   switch (ch) {
   case 'U':
@@ -116,7 +116,7 @@ void SliderMap::set_n_diff_color() {
   n_diff_colors = 0;
   for (size_t i = 0; i < N_ROW; ++i) {
     for (size_t j = 0; j < N_COL; ++j) {
-      if (color_map[i][j] != target_map[i][j] && color_map[i][j] != 'W' &&
+      if (color_map[i][j] != target_map[i][j] && 
           target_map[i][j] != 'W') {
         n_diff_colors++;
       }

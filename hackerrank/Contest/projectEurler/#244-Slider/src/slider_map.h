@@ -14,8 +14,6 @@
 using namespace std;
 
 typedef vector<vector<char>> ColorMap;
-typedef vector<vector<char>> *ColorMapPtr;
-
 
 struct SliderMap {
 public:

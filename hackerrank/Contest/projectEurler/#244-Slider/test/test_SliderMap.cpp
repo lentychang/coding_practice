@@ -70,8 +70,8 @@ TEST_F(SliderMapEasySample,NotStepBackFromPreviousAction){
 }
 
 TEST_F(SliderMapEasySample,numberOfDiff){
-  EXPECT_EQ(begin.n_diff_colors,1);
-  EXPECT_EQ(begin('L').n_diff_colors,0);
+  EXPECT_EQ(begin.n_diff_colors,2);
+  EXPECT_EQ(begin('L').n_diff_colors,1);
   EXPECT_EQ(begin('L')('U').n_diff_colors,0);
 }
 
@@ -84,14 +84,26 @@ TEST_F(SliderMapEasySample,checksumTest){
 
 TEST_F(SliderMapDifficultSample,TestExecutionTime){
   SliderMap* smap = &begin;
-  int idx{0};
-  srand((int)time(0));
+  unsigned int idx{0};
+  srand(static_cast<unsigned int>(time(0)));
   for(int i =0; i<100;++i){
-    idx = rand() % static_cast<int>(smap->possible_dirs.size());    
+    idx = static_cast<unsigned int>(rand()) % smap->possible_dirs.size();    
     auto dir = smap->possible_dirs.at(idx);
     smap = new SliderMap((*smap)(dir));
   }
   smap->print_map();  
+}
+
+TEST_F(SliderMapDifficultSample,TestResult){
+  string result{"LUULURDRDLLULDRDLURRURUL"};
+
+  SliderMap *smap =&begin;
+  for (auto dir:result)
+  {
+    smap = new SliderMap((*smap)(dir));
+  }
+
+  smap->print_map();
 }
 
 
