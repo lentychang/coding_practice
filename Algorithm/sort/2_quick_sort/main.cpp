@@ -11,12 +11,12 @@ using namespace std;
     array, and places all smaller (smaller than pivot) 
    to left of pivot and all greater elements to right 
    of pivot */
-int partition (vector<int>& arr, int low, int unsigned high) 
+int partition (vector<int>& arr, int head, int tail) 
 { 
-    int pivot = arr[high];    // pivot 
-    int i = (low - 1);  // Index of smaller element 
+    int pivot = arr[tail];    // pivot 
+    int i = (head - 1);  // Index of smaller element 
   
-    for (int j = low; j <= high- 1; j++) 
+    for (int j = head; j <= tail- 1; j++) 
     { 
         // If current element is smaller than or 
         // equal to pivot 
@@ -26,7 +26,7 @@ int partition (vector<int>& arr, int low, int unsigned high)
             swap(arr[i], arr[j]); 
         } 
     } 
-    swap(arr[i + 1], arr[high]); 
+    swap(arr[i + 1], arr[tail]); 
     return (i + 1); 
 } 
   
@@ -55,16 +55,16 @@ void printArray(vector<int>& arr, int size)
     int i; 
     for (i=0; i < size; i++) 
         printf("%d ", arr[i]); 
-    printf("n"); 
+    printf("\n"); 
 } 
   
 // Driver program to test above functions 
 int main() 
 { 
-    vector<int> arr {89, 34, 23, 78, 67, 100, 66, 29, 79, 55, 78, 88, 92, 96, 96, 23}; 
+    vector<int> arr {89, 34, 23, 78, 67, 100, 66, 29, 79, 55, 78, 88, 23, 96, 96, 92}; 
     int n = arr.size(); 
     quickSort(arr, 0, n-1); 
-    printf("Sorted array: n"); 
+    printf("Sorted array: \n"); 
     printArray(arr, n); 
     return 0; 
 } 
